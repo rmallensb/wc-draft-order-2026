@@ -276,6 +276,7 @@ def build_leaderboard(
         group_pts = 0
         knockout_pts = 0
         fifa_sum = 0
+        wins = draws = losses = goals_for = goals_against = clean_sheets = 0
         team_rows = []
         for team_name in trio:
             if not team_name:
@@ -288,6 +289,12 @@ def build_leaderboard(
             group_pts += t["groupPoints"]
             knockout_pts += t["knockoutBonus"]
             fifa_sum += t["fifaRank"]
+            wins += t["wins"]
+            draws += t["draws"]
+            losses += t["losses"]
+            goals_for += t["goalsFor"]
+            goals_against += t["goalsAgainst"]
+            clean_sheets += t["cleanSheets"]
             team_rows.append({
                 "team": team_name,
                 "pot": t["pot"],
@@ -295,11 +302,25 @@ def build_leaderboard(
                 "knockoutBonus": t["knockoutBonus"],
                 "finishLabel": t["finishLabel"],
                 "fifaRank": t["fifaRank"],
+                "wins": t["wins"],
+                "draws": t["draws"],
+                "losses": t["losses"],
+                "goalsFor": t["goalsFor"],
+                "goalsAgainst": t["goalsAgainst"],
+                "cleanSheets": t["cleanSheets"],
             })
         rows.append({
             "id": mgr["id"],
             "manager": mgr["name"],
             "teams": team_rows,
+            "categories": {
+                "wins": wins,
+                "draws": draws,
+                "losses": losses,
+                "goalsFor": goals_for,
+                "goalsAgainst": goals_against,
+                "cleanSheets": clean_sheets,
+            },
             "groupPoints": group_pts,
             "knockoutBonus": knockout_pts,
             "totalPoints": group_pts + knockout_pts,

@@ -30,6 +30,7 @@
   renderSynced(data);
   renderWarnings(data.warnings);
   renderLeaderboard(data.leaderboard);
+  renderBreakdown(data.leaderboard);
   renderKnockoutGrid(data.teamResults);
   renderMatchLog(data.matches);
 
@@ -92,6 +93,35 @@
         el("td", { className: "num", text: r.knockoutBonus }),
         el("td", { className: "num total", text: r.totalPoints }),
         el("td", { className: "num", text: r.fifaRankSum }),
+      ]);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderBreakdown(rows) {
+    const tbody = document.querySelector("#breakdown tbody");
+    clear(tbody);
+    if (!rows || !rows.length) {
+      const td = el("td", { className: "missing", text: "No data yet — run sync." });
+      td.colSpan = 8;
+      tbody.appendChild(el("tr", {}, [td]));
+      return;
+    }
+    rows.forEach((r) => {
+      const c = r.categories || { wins: 0, draws: 0, goalsFor: 0, cleanSheets: 0 };
+      const winPts = c.wins * 3;
+      const drawPts = c.draws;
+      const goalPts = c.goalsFor;
+      const cleanPts = c.cleanSheets;
+      const tr = el("tr", { className: `rank-${r.rank}` }, [
+        el("td", { text: r.manager }),
+        el("td", { className: "num", title: `${winPts} pts`, text: c.wins }),
+        el("td", { className: "num", title: `${drawPts} pts`, text: c.draws }),
+        el("td", { className: "num", title: `${goalPts} pts`, text: c.goalsFor }),
+        el("td", { className: "num", title: `${cleanPts} pts`, text: c.cleanSheets }),
+        el("td", { className: "num", text: r.groupPoints }),
+        el("td", { className: "num", text: r.knockoutBonus }),
+        el("td", { className: "num total", text: r.totalPoints }),
       ]);
       tbody.appendChild(tr);
     });

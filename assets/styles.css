@@ -116,6 +116,12 @@ table.leaderboard tr.rank-1 td:first-child {
   font-weight: 700;
 }
 
+table.leaderboard th small {
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
 .team-chip {
   display: inline-block;
   padding: 0.1rem 0.45rem;
