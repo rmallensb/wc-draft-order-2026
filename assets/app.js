@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   const $ = (sel) => document.querySelector(sel);
 
   const STAGE_LABELS = {
@@ -21,18 +21,38 @@
     "FINAL",
   ];
 
-  const data = window.RESULTS;
-  if (!data) {
-    $("#synced").textContent = "Failed to load data/results.js — run `make sync` first.";
+  const loaded = await loadData();
+  if (!loaded) {
+    $("#synced").textContent = "No data available — run `make sync` or configure config.js → workerUrl.";
     return;
   }
+  const { data, source } = loaded;
 
-  renderSynced(data);
+  renderSynced(data, source);
   renderWarnings(data.warnings);
   renderLeaderboard(data.leaderboard);
   renderBreakdown(data.leaderboard);
   renderKnockoutGrid(data.teamResults);
   renderMatchLog(data.matches);
+
+  async function loadData() {
+    const workerUrl = (window.CONFIG && window.CONFIG.workerUrl) || "";
+    if (workerUrl) {
+      try {
+        const resp = await fetch(workerUrl, { cache: "no-store" });
+        if (resp.ok) {
+          return { data: await resp.json(), source: "worker" };
+        }
+        console.warn(`Worker returned HTTP ${resp.status}, falling back to static data`);
+      } catch (err) {
+        console.warn("Worker fetch failed, falling back to static data:", err);
+      }
+    }
+    if (window.RESULTS) {
+      return { data: window.RESULTS, source: "static" };
+    }
+    return null;
+  }
 
   function el(tag, opts = {}, children = []) {
     const node = document.createElement(tag);
@@ -50,7 +70,7 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
-  function renderSynced(d) {
+  function renderSynced(d, source) {
     if (!d.lastSynced) {
       $("#synced").textContent = "Awaiting first sync.";
       return;
@@ -62,7 +82,8 @@
     });
     const finished = d.matchesFinished ?? 0;
     const total = d.matchesProcessed ?? 0;
-    $("#synced").textContent = `Last synced: ${ts} • ${finished} of ${total} league-relevant matches finished`;
+    const prefix = source === "worker" ? "Live · fetched" : "Last manual sync";
+    $("#synced").textContent = `${prefix} ${ts} • ${finished} of ${total} league-relevant matches finished`;
   }
 
   function renderWarnings(warnings) {

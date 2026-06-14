@@ -1,0 +1,20 @@
+name = "wc-draft-order"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# Cache responses at the edge for 60s so a viral refresh doesn't blow through
+# football-data.org's 10 req/min ceiling.
+[vars]
+CACHE_TTL_SECONDS = "60"
+
+# Persistent logs in the Cloudflare dashboard (Workers & Pages → wc-draft-order
+# → Logs). Free tier includes a generous quota — head_sampling_rate = 1 means
+# every request is logged.
+[observability]
+enabled = true
+
+[observability.logs]
+head_sampling_rate = 1
+
+# FOOTBALL_DATA_API_KEY is set as a secret, not a var:
+#   echo "your-key-here" | npx wrangler secret put FOOTBALL_DATA_API_KEY
