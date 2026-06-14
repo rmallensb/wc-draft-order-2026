@@ -58,7 +58,8 @@ main {
   padding: 1.5rem 1rem 3rem;
 }
 
-section {
+section,
+details.section {
   margin-top: 2.5rem;
 }
 
@@ -67,6 +68,39 @@ section h2 {
   font-size: 1.4rem;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.4rem;
+}
+
+details.section > summary {
+  font-size: 1.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.75rem 0.4rem 0;
+  margin: 0 0 0.25rem;
+  position: relative;
+  list-style: none;          /* hide default triangle (Firefox) */
+  user-select: none;
+}
+details.section > summary::-webkit-details-marker {
+  display: none;             /* hide default triangle (Safari/Chrome) */
+}
+details.section > summary::after {
+  content: "▾";
+  position: absolute;
+  right: 0.25rem;
+  top: 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  transition: transform 0.15s ease;
+}
+details.section:not([open]) > summary::after {
+  transform: rotate(-90deg);
+}
+details.section > summary:hover {
+  color: var(--accent);
+}
+details.section > summary:hover::after {
+  color: var(--accent);
 }
 
 .hint {

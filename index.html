@@ -14,8 +14,8 @@
   </header>
 
   <main>
-    <section id="leaderboard-section">
-      <h2>Leaderboard</h2>
+    <details open class="section" id="leaderboard-section">
+      <summary>Leaderboard</summary>
       <p class="hint">Sorted by Total Points. Tie-breaker: higher FIFA Rank Sum (underdog bonus).</p>
       <div class="table-wrap">
         <table id="leaderboard" class="leaderboard">
@@ -26,6 +26,7 @@
               <th>Pot 1</th>
               <th>Pot 2</th>
               <th>Pot 3</th>
+              <th class="num" title="Group games played across all three teams">GP</th>
               <th class="num">Group</th>
               <th class="num">KO</th>
               <th class="num total">Total</th>
@@ -35,10 +36,10 @@
           <tbody></tbody>
         </table>
       </div>
-    </section>
+    </details>
 
-    <section id="breakdown-section">
-      <h2>Point Breakdown</h2>
+    <details open class="section" id="breakdown-section">
+      <summary>Point Breakdown</summary>
       <p class="hint">How each manager's points were earned. Multipliers per category come from the scoring rules below.</p>
       <div class="table-wrap">
         <table id="breakdown" class="leaderboard">
@@ -57,22 +58,22 @@
           <tbody></tbody>
         </table>
       </div>
-    </section>
+    </details>
 
-    <section id="knockout-section">
-      <h2>Knockout Progress</h2>
+    <details open class="section" id="knockout-section">
+      <summary>Knockout Progress</summary>
       <p class="hint">Furthest stage each league team has reached. Updates as the tournament progresses.</p>
       <div id="knockout-grid" class="knockout-grid"></div>
-    </section>
+    </details>
 
-    <section id="matches-section">
-      <h2>Match Log</h2>
+    <details open class="section" id="matches-section">
+      <summary>Match Log</summary>
       <p class="hint">All World Cup matches involving league teams. Group stage points shown for finished games.</p>
       <div id="match-log" class="match-log"></div>
-    </section>
+    </details>
 
-    <section id="rules-section">
-      <h2>Scoring Rules</h2>
+    <details class="section" id="rules-section">
+      <summary>Scoring Rules</summary>
       <div class="rules-grid">
         <div>
           <h3>Group Stage</h3>
@@ -95,7 +96,7 @@
           </ul>
         </div>
       </div>
-    </section>
+    </details>
   </main>
 
   <footer>

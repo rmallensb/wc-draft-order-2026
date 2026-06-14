@@ -99,17 +99,20 @@
     clear(tbody);
     if (!rows || !rows.length) {
       const td = el("td", { className: "missing", text: "No leaderboard yet — fill in data/managers.json with each manager's trio, then run sync.py." });
-      td.colSpan = 9;
+      td.colSpan = 10;
       tbody.appendChild(el("tr", {}, [td]));
       return;
     }
     rows.forEach((r) => {
+      const c = r.categories || { wins: 0, draws: 0, losses: 0 };
+      const gamesPlayed = c.wins + c.draws + c.losses;
       const tr = el("tr", { className: `rank-${r.rank}` }, [
         el("td", { text: r.rank }),
         el("td", { text: r.manager }),
         el("td", {}, [teamChip(r.teams[0], 1)]),
         el("td", {}, [teamChip(r.teams[1], 2)]),
         el("td", {}, [teamChip(r.teams[2], 3)]),
+        el("td", { className: "num", title: `${c.wins}W-${c.draws}D-${c.losses}L of 9 possible`, text: `${gamesPlayed}/9` }),
         el("td", { className: "num", text: r.groupPoints }),
         el("td", { className: "num", text: r.knockoutBonus }),
         el("td", { className: "num total", text: r.totalPoints }),
