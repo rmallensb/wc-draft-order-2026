@@ -1,0 +1,38 @@
+{
+  "_comment": "The 18 World Cup teams in this league's draw, grouped into 3 pots. apiName is the team name as it appears in the football-data.org WC response; sync.py logs warnings if a team can't be matched. Adjust apiName values after the first sync if any team is reported unmatched.",
+  "pots": {
+    "1": {
+      "label": "Favorites",
+      "teams": [
+        { "name": "Spain",     "apiName": "Spain",          "fifaRank": 2, "odds": "+475" },
+        { "name": "France",    "apiName": "France",         "fifaRank": 3, "odds": "+500" },
+        { "name": "England",   "apiName": "England",        "fifaRank": 4, "odds": "+650" },
+        { "name": "Brazil",    "apiName": "Brazil",         "fifaRank": 6, "odds": "+800" },
+        { "name": "Argentina", "apiName": "Argentina",      "fifaRank": 1, "odds": "+900" },
+        { "name": "Portugal",  "apiName": "Portugal",       "fifaRank": 7, "odds": "+1000" }
+      ]
+    },
+    "2": {
+      "label": "Strong Teams",
+      "teams": [
+        { "name": "USA",     "apiName": "United States", "fifaRank": 16, "odds": "+6000" },
+        { "name": "Japan",   "apiName": "Japan",         "fifaRank": 18, "odds": "+6500" },
+        { "name": "Ecuador", "apiName": "Ecuador",       "fifaRank": 27, "odds": "+8000" },
+        { "name": "Mexico",  "apiName": "Mexico",        "fifaRank": 17, "odds": "+8000" },
+        { "name": "Sweden",  "apiName": "Sweden",        "fifaRank": 28, "odds": "+10000" },
+        { "name": "Türkiye", "apiName": "Turkey",        "fifaRank": 25, "odds": "+10000" }
+      ]
+    },
+    "3": {
+      "label": "Chaos Teams",
+      "teams": [
+        { "name": "Czechia",     "apiName": "Czechia",        "fifaRank": 36, "odds": "+25000" },
+        { "name": "Ivory Coast", "apiName": "Ivory Coast",    "fifaRank": 42, "odds": "+25000" },
+        { "name": "Egypt",       "apiName": "Egypt",          "fifaRank": 35, "odds": "+30000" },
+        { "name": "South Korea", "apiName": "South Korea",    "fifaRank": 23, "odds": "+40000" },
+        { "name": "Australia",   "apiName": "Australia",      "fifaRank": 26, "odds": "+60000" },
+        { "name": "Iran",        "apiName": "Iran",           "fifaRank": 21, "odds": "+70000" }
+      ]
+    }
+  }
+}

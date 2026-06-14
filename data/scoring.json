@@ -1,0 +1,18 @@
+{
+  "_comment": "Point values mirror the original workbook scoring (archive/COMMISSIONER_GUIDE.md). knockout values are CUMULATIVE — a team that reaches QF earns 11 total (5 advance + 3 R16 + 3 QF), not just 3.",
+  "groupStage": {
+    "win": 3,
+    "draw": 1,
+    "goalScored": 1,
+    "cleanSheet": 1
+  },
+  "knockout": {
+    "GROUP_STAGE": 0,
+    "LAST_32": 5,
+    "LAST_16": 8,
+    "QUARTER_FINALS": 11,
+    "SEMI_FINALS": 16,
+    "FINAL": 23,
+    "WINNER": 33
+  }
+}

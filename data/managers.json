@@ -1,0 +1,17 @@
+{
+  "_comment": "The 12 managers and their draw results. pot1/pot2/pot3 values MUST match the canonical `name` in teams.json.",
+  "managers": [
+    { "id": 1,  "name": "Sam",    "pot1": "Brazil",    "pot2": "Sweden",  "pot3": "South Korea" },
+    { "id": 2,  "name": "Gabe",   "pot1": "France",    "pot2": "Türkiye", "pot3": "Iran" },
+    { "id": 3,  "name": "Danny",  "pot1": "Brazil",    "pot2": "Mexico",  "pot3": "Australia" },
+    { "id": 4,  "name": "Ryan",   "pot1": "Spain",     "pot2": "Japan",   "pot3": "Czechia" },
+    { "id": 5,  "name": "Nick",   "pot1": "England",   "pot2": "Sweden",  "pot3": "Czechia" },
+    { "id": 6,  "name": "Jack",   "pot1": "Portugal",  "pot2": "USA",     "pot3": "Australia" },
+    { "id": 7,  "name": "Rob",    "pot1": "Argentina", "pot2": "Ecuador", "pot3": "Egypt" },
+    { "id": 8,  "name": "Janny",  "pot1": "Argentina", "pot2": "USA",     "pot3": "Ivory Coast" },
+    { "id": 9,  "name": "Trevor", "pot1": "Portugal",  "pot2": "Mexico",  "pot3": "Egypt" },
+    { "id": 10, "name": "Vance",  "pot1": "Spain",     "pot2": "Ecuador", "pot3": "Iran" },
+    { "id": 11, "name": "Aiden",  "pot1": "England",   "pot2": "Japan",   "pot3": "Ivory Coast" },
+    { "id": 12, "name": "Jordan", "pot1": "France",    "pot2": "Türkiye", "pot3": "South Korea" }
+  ]
+}

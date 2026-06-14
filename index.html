@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Bussy Inspectors — 2026 World Cup Draft Order</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>The Bussy Inspectors</h1>
+    <p class="subtitle">2026 FIFA World Cup — Fantasy Football Draft Order</p>
+    <p class="synced" id="synced">Loading…</p>
+  </header>
+
+  <main>
+    <section id="leaderboard-section">
+      <h2>Leaderboard</h2>
+      <p class="hint">Sorted by Total Points. Tie-breaker: higher FIFA Rank Sum (underdog bonus).</p>
+      <div class="table-wrap">
+        <table id="leaderboard" class="leaderboard">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Manager</th>
+              <th>Pot 1</th>
+              <th>Pot 2</th>
+              <th>Pot 3</th>
+              <th class="num">Group</th>
+              <th class="num">KO</th>
+              <th class="num total">Total</th>
+              <th class="num">FIFA Σ</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="knockout-section">
+      <h2>Knockout Progress</h2>
+      <p class="hint">Furthest stage each league team has reached. Updates as the tournament progresses.</p>
+      <div id="knockout-grid" class="knockout-grid"></div>
+    </section>
+
+    <section id="matches-section">
+      <h2>Match Log</h2>
+      <p class="hint">All World Cup matches involving league teams. Group stage points shown for finished games.</p>
+      <div id="match-log" class="match-log"></div>
+    </section>
+
+    <section id="rules-section">
+      <h2>Scoring Rules</h2>
+      <div class="rules-grid">
+        <div>
+          <h3>Group Stage</h3>
+          <ul>
+            <li>Win = 3 pts</li>
+            <li>Draw = 1 pt</li>
+            <li>Each goal scored = 1 pt</li>
+            <li>Clean sheet = 1 pt</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Knockout Bonus (cumulative)</h3>
+          <ul>
+            <li>Advance from group = +5 (total 5)</li>
+            <li>Reach Round of 16 = +3 (total 8)</li>
+            <li>Reach Quarterfinals = +3 (total 11)</li>
+            <li>Reach Semifinals = +5 (total 16)</li>
+            <li>Reach Final = +7 (total 23)</li>
+            <li>Win World Cup = +10 (total 33)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Updates require a manual sync — see <code>README.md</code>. <a href="https://github.com/">Repo</a></p>
+  </footer>
+
+  <script src="data/results.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</body>
+</html>
