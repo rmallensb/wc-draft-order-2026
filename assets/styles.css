@@ -300,6 +300,79 @@ table.leaderboard th small {
   font-size: 0.8rem;
 }
 
+/* Expandable match details */
+.match-item { display: flex; flex-direction: column; }
+.match-row.clickable { cursor: pointer; transition: background 0.1s; }
+.match-row.clickable:hover { background: #25324a; }
+.match-item.expanded .match-row {
+  border-radius: 6px 6px 0 0;
+  border-bottom-color: transparent;
+}
+.match-details { display: none; }
+.match-item.expanded .match-details {
+  display: block;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-top: 1px solid #2c3a52;
+  border-radius: 0 0 6px 6px;
+  padding: 0.6rem 0.9rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.details-loading { color: var(--text-dim); margin: 0; font-style: italic; }
+.details-line.ht {
+  color: var(--text-dim);
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+}
+.details-section {
+  margin: 0.5rem 0 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.details-section:first-child { margin-top: 0; }
+
+.goal-list, .booking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.goal-row, .booking-row {
+  display: grid;
+  grid-template-columns: 48px 22px 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+}
+.goal-row.team-home { background: rgba(56, 189, 248, 0.08); border-left: 3px solid var(--accent); }
+.goal-row.team-away { background: rgba(167, 139, 250, 0.08); border-left: 3px solid var(--pot3); }
+.goal-minute {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+.goal-scorer { font-weight: 500; }
+.goal-team {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-align: right;
+}
+.goal-assist {
+  grid-column: 3 / -1;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  font-style: italic;
+  padding-left: 0;
+}
+.booking-row.card-yellow_card { background: rgba(245, 158, 11, 0.08); }
+.booking-row.card-red_card { background: rgba(239, 68, 68, 0.10); }
+
 .team-name.is-league { font-weight: 600; }
 
 .stage-divider {

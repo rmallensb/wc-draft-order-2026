@@ -37,7 +37,8 @@
   renderLeaderboard(data.leaderboard, modal);
   renderBreakdown(data.leaderboard, modal);
   renderKnockoutGrid(data.teamResults, modal);
-  renderMatchLog(data.matches);
+  const workerUrl = source === "worker" ? (window.CONFIG && window.CONFIG.workerUrl) || "" : "";
+  renderMatchLog(data.matches, { workerUrl });
 
   async function loadData() {
     const workerUrl = (window.CONFIG && window.CONFIG.workerUrl) || "";
@@ -404,7 +405,7 @@
     });
   }
 
-  function renderMatchLog(matches) {
+  function renderMatchLog(matches, options) {
     const wrap = $("#match-log");
     const checkbox = document.getElementById("hide-non-league");
     const HIDE_KEY = "wc-draft-order:hide-non-league";
@@ -447,11 +448,114 @@
         const list = byStage.get(stage);
         if (!list) return;
         wrap.appendChild(el("div", { className: "stage-divider", text: STAGE_LABELS[stage] || stage }));
-        list.forEach((m) => wrap.appendChild(matchRow(m)));
+        list.forEach((m) => wrap.appendChild(matchItem(m, options)));
       });
     }
 
     draw();
+  }
+
+  function matchItem(m, options) {
+    const row = matchRow(m);
+    const details = el("div", { className: "match-details" });
+    const item = el("div", { className: "match-item" }, [row, details]);
+
+    if (options?.workerUrl) {
+      row.classList.add("clickable");
+      row.setAttribute("role", "button");
+      row.tabIndex = 0;
+      row.setAttribute("aria-expanded", "false");
+      const toggle = async () => {
+        const expanded = item.classList.toggle("expanded");
+        row.setAttribute("aria-expanded", expanded ? "true" : "false");
+        if (expanded && !item.dataset.loaded) {
+          await loadMatchDetails(m, details, options);
+          item.dataset.loaded = "1";
+        }
+      };
+      row.addEventListener("click", toggle);
+      row.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+    }
+    return item;
+  }
+
+  async function loadMatchDetails(m, container, options) {
+    clear(container);
+    // Render half-time row immediately (we already have that from the bulk endpoint).
+    if (typeof m.halfTimeHome === "number" && typeof m.halfTimeAway === "number") {
+      container.appendChild(el("p", { className: "details-line ht", text: `Half-time: ${m.halfTimeHome} – ${m.halfTimeAway}` }));
+    }
+    const loading = el("p", { className: "details-loading", text: "Loading goals…" });
+    container.appendChild(loading);
+
+    try {
+      const base = options.workerUrl.replace(/\/+$/, "");
+      const params = new URLSearchParams({ home: m.home, away: m.away, date: m.utcDate || "" });
+      const resp = await fetch(`${base}/match-events?${params.toString()}`, { cache: "no-store" });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      loading.remove();
+      renderEventsBody(container, data, m);
+    } catch (err) {
+      loading.remove();
+      container.appendChild(el("p", { className: "warning", text: `Couldn't load details: ${err.message || err}` }));
+    }
+  }
+
+  function renderEventsBody(container, data, m) {
+    if (!data || !Array.isArray(data.goals)) {
+      container.appendChild(el("p", { className: "warning", text: "Worker returned unexpected data — has it been redeployed with the latest changes?" }));
+      return;
+    }
+    if (data.error && data.goals.length === 0) {
+      container.appendChild(el("p", { className: "missing", text: `Couldn't find goal data — ${data.error}` }));
+      return;
+    }
+
+    container.appendChild(el("h4", { className: "details-section", text: `Goals (${data.goals.length})` }));
+    if (data.goals.length === 0) {
+      container.appendChild(el("p", { className: "missing", text: "No goals scored." }));
+    } else {
+      const list = el("div", { className: "goal-list" });
+      data.goals.forEach((g) => {
+        // Match goal's team name to the row's home/away. ESPN may use slightly different
+        // names (e.g. "United States" vs "USA"), so substring-match in both directions.
+        const teamLower = (g.team || "").toLowerCase();
+        const homeLower = (m.home || "").toLowerCase();
+        const isHome = teamLower.includes(homeLower) || homeLower.includes(teamLower);
+        const minuteText = (g.minute || "?").replace(/^(\d+)$/, "$1'"); // bare numbers → "12'"
+        const typeBadge = g.ownGoal ? " (OG)" : (g.type && g.type !== "Goal" ? ` (${g.type})` : "");
+        const children = [
+          el("span", { className: "goal-minute", text: minuteText }),
+          el("span", { className: "goal-icon", text: g.ownGoal ? "🥅" : "⚽" }),
+          el("span", { className: "goal-scorer", text: `${g.scorer || "Unknown"}${typeBadge}` }),
+          el("span", { className: "goal-team", text: g.team || "" }),
+        ];
+        list.appendChild(el("div", { className: `goal-row team-${isHome ? "home" : "away"}` }, children));
+      });
+      container.appendChild(list);
+    }
+
+    if (data.cards && data.cards.length > 0) {
+      container.appendChild(el("h4", { className: "details-section", text: "Cards" }));
+      const list = el("div", { className: "booking-list" });
+      data.cards.forEach((b) => {
+        const cardLabel = (b.card || "").toLowerCase();
+        const isRed = cardLabel.includes("red");
+        const cls = isRed ? "card-red_card" : "card-yellow_card";
+        const icon = isRed ? "🟥" : "🟨";
+        const minute = (b.minute || "?").replace(/^(\d+)$/, "$1'");
+        list.appendChild(el("div", { className: `booking-row ${cls}` }, [
+          el("span", { className: "goal-minute", text: minute }),
+          el("span", { className: "goal-icon", text: icon }),
+          el("span", { className: "goal-scorer", text: b.player || "" }),
+          el("span", { className: "goal-team", text: b.team || "" }),
+        ]));
+      });
+      container.appendChild(list);
+    }
   }
 
   function matchRow(m) {

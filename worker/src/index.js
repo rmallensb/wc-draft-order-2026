@@ -33,47 +33,193 @@ export default {
       return new Response("Method Not Allowed", { status: 405, headers: CORS_HEADERS });
     }
 
-    const cache = caches.default;
-    const cacheKey = new Request(new URL("/results", request.url).toString(), { method: "GET" });
-    const cached = await cache.match(cacheKey);
-    if (cached) {
-      console.log("cache HIT");
-      const headers = new Headers(cached.headers);
-      headers.set("x-cache", "HIT");
-      return new Response(cached.body, { status: cached.status, headers });
+    const url = new URL(request.url);
+    if (url.pathname.match(/^\/match-events\/?$/)) {
+      return handleMatchEvents(request, env, ctx);
     }
-
-    if (!env.FOOTBALL_DATA_API_KEY) {
-      console.error("FOOTBALL_DATA_API_KEY secret is not configured");
-      return jsonResponse({ error: "FOOTBALL_DATA_API_KEY secret is not configured on this Worker." }, 500);
-    }
-
-    console.log("cache MISS — fetching upstream from football-data.org");
-    let matches;
-    try {
-      matches = await fetchMatches(env.FOOTBALL_DATA_API_KEY);
-    } catch (err) {
-      console.error("upstream fetch failed:", err.message || err);
-      return jsonResponse({ error: String(err.message || err) }, 502);
-    }
-
-    const output = computeResults(matches);
-    console.log(
-      `computed: ${output.matchesFinished}/${output.matchesProcessed} finished · top: ${output.leaderboard[0]?.manager ?? "(none)"} @ ${output.leaderboard[0]?.totalPoints ?? 0}`
-    );
-    if (output.warnings.length) {
-      console.warn("warnings:", output.warnings.join(" | "));
-    }
-    const ttl = Number(env.CACHE_TTL_SECONDS || 60);
-    const response = jsonResponse(output, 200, {
-      "cache-control": `public, max-age=${ttl}`,
-      "x-cache": "MISS",
-    });
-
-    ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return response;
+    return handleLeaderboard(request, env, ctx);
   },
 };
+
+// ESPN uses different team naming than football-data.org in a few spots.
+// Most of our teams.json `apiName` values line up; these are the exceptions.
+const ESPN_ALIASES = {
+  "usa": ["united states"],
+  "south korea": ["korea republic"],
+  "ivory coast": ["côte d'ivoire", "cote d'ivoire"],
+  "turkey": ["türkiye"],
+  "türkiye": ["turkey"],
+  "czechia": ["czech republic"],
+  "czech republic": ["czechia"],
+};
+
+function nameCandidates(name) {
+  const n = (name || "").toLowerCase().trim();
+  return [n, ...(ESPN_ALIASES[n] || [])];
+}
+
+function findEspnEvent(home, away, events) {
+  const hOpts = nameCandidates(home);
+  const aOpts = nameCandidates(away);
+  for (const e of events) {
+    const name = (e.name || "").toLowerCase();
+    if (hOpts.some(h => name.includes(h)) && aOpts.some(a => name.includes(a))) return e;
+  }
+  for (const e of events) {
+    const comps = (e.competitions?.[0]?.competitors || []).map(c => (c.team?.displayName || "").toLowerCase());
+    const hasHome = hOpts.some(h => comps.some(n => n.includes(h)));
+    const hasAway = aOpts.some(a => comps.some(n => n.includes(a)));
+    if (hasHome && hasAway) return e;
+  }
+  return null;
+}
+
+async function handleMatchEvents(request, env, ctx) {
+  const url = new URL(request.url);
+  const home = url.searchParams.get("home");
+  const away = url.searchParams.get("away");
+  const date = url.searchParams.get("date");
+  if (!home || !away || !date) {
+    return jsonResponse({ error: "Missing required query params: home, away, date" }, 400);
+  }
+
+  const cache = caches.default;
+  const cacheKey = new Request(url.toString(), { method: "GET" });
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    console.log(`match-events cache HIT for ${home} vs ${away}`);
+    const headers = new Headers(cached.headers);
+    headers.set("x-cache", "HIT");
+    return new Response(cached.body, { status: cached.status, headers });
+  }
+
+  console.log(`match-events cache MISS for ${home} vs ${away} on ${date}`);
+  const baseDate = new Date(date);
+  if (isNaN(baseDate)) {
+    return jsonResponse({ goals: [], cards: [], error: "Invalid date" }, 400);
+  }
+
+  // Probe ±2 days because ESPN sometimes partitions by venue local time, not UTC.
+  const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world";
+  let target = null;
+  let foundDate = null;
+  for (const delta of [0, -1, 1, -2, 2]) {
+    const d = new Date(baseDate);
+    d.setUTCDate(d.getUTCDate() + delta);
+    const yyyymmdd = d.toISOString().slice(0, 10).replace(/-/g, "");
+    let sb;
+    try {
+      sb = await fetch(`${ESPN_BASE}/scoreboard?dates=${yyyymmdd}`);
+    } catch (err) {
+      continue;
+    }
+    if (!sb.ok) continue;
+    const data = await sb.json();
+    const events = data.events || [];
+    target = findEspnEvent(home, away, events);
+    if (target) { foundDate = yyyymmdd; break; }
+  }
+
+  if (!target) {
+    console.warn(`No ESPN match found for ${home} vs ${away}`);
+    const out = { goals: [], cards: [], error: "No matching ESPN event found" };
+    const r = jsonResponse(out, 200, { "cache-control": "public, max-age=300" });
+    ctx.waitUntil(cache.put(cacheKey, r.clone()));
+    return r;
+  }
+
+  let summary;
+  try {
+    summary = await fetch(`${ESPN_BASE}/summary?event=${target.id}`);
+  } catch (err) {
+    return jsonResponse({ goals: [], cards: [], error: String(err.message || err) }, 502);
+  }
+  if (!summary.ok) {
+    return jsonResponse({ goals: [], cards: [], error: `Summary HTTP ${summary.status}` }, 502);
+  }
+  const sd = await summary.json();
+  const keyEvents = sd.keyEvents || [];
+
+  const goals = [];
+  const cards = [];
+  for (const e of keyEvents) {
+    const typeId = (e.type?.type || "").toLowerCase();
+    const typeText = e.type?.text || "";
+    const minute = e.clock?.displayValue || "?";
+    const team = e.team?.displayName || "?";
+    const playerName = e.participants?.[0]?.athlete?.displayName || null;
+    const isGoal = typeId === "goal" || typeId === "own-goal" || typeId === "penalty-goal" || e.scoringPlay;
+    const isCard = typeId.includes("card") || typeText.toLowerCase().includes("card");
+
+    if (isGoal) {
+      goals.push({
+        minute,
+        team,
+        scorer: playerName,
+        type: typeText || "Goal",
+        text: e.shortText || e.text || "",
+        ownGoal: typeId === "own-goal",
+      });
+    } else if (isCard) {
+      cards.push({
+        minute,
+        team,
+        player: playerName,
+        card: typeText || "Card",
+      });
+    }
+  }
+
+  console.log(`ESPN id=${target.id} on ${foundDate} → ${goals.length} goals, ${cards.length} cards`);
+  const out = { source: "espn", espnEventId: target.id, espnDate: foundDate, goals, cards };
+  // Match data only changes during live games. Cache 30s — fresh enough for new goals,
+  // long enough to absorb 12 friends F5'ing during a match.
+  const r = jsonResponse(out, 200, { "cache-control": "public, max-age=30", "x-cache": "MISS" });
+  ctx.waitUntil(cache.put(cacheKey, r.clone()));
+  return r;
+}
+
+async function handleLeaderboard(request, env, ctx) {
+  const cache = caches.default;
+  const cacheKey = new Request(new URL("/results", request.url).toString(), { method: "GET" });
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    console.log("cache HIT");
+    const headers = new Headers(cached.headers);
+    headers.set("x-cache", "HIT");
+    return new Response(cached.body, { status: cached.status, headers });
+  }
+
+  if (!env.FOOTBALL_DATA_API_KEY) {
+    console.error("FOOTBALL_DATA_API_KEY secret is not configured");
+    return jsonResponse({ error: "FOOTBALL_DATA_API_KEY secret is not configured on this Worker." }, 500);
+  }
+
+  console.log("cache MISS — fetching upstream from football-data.org");
+  let matches;
+  try {
+    matches = await fetchMatches(env.FOOTBALL_DATA_API_KEY);
+  } catch (err) {
+    console.error("upstream fetch failed:", err.message || err);
+    return jsonResponse({ error: String(err.message || err) }, 502);
+  }
+
+  const output = computeResults(matches);
+  console.log(
+    `computed: ${output.matchesFinished}/${output.matchesProcessed} finished · top: ${output.leaderboard[0]?.manager ?? "(none)"} @ ${output.leaderboard[0]?.totalPoints ?? 0}`
+  );
+  if (output.warnings.length) {
+    console.warn("warnings:", output.warnings.join(" | "));
+  }
+  const ttl = Number(env.CACHE_TTL_SECONDS || 60);
+  const response = jsonResponse(output, 200, {
+    "cache-control": `public, max-age=${ttl}`,
+    "x-cache": "MISS",
+  });
+
+  ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
+}
 
 function jsonResponse(body, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(body, null, 2), {
