@@ -393,11 +393,11 @@ def main() -> int:
 
     applied_overrides = apply_overrides(matches, overrides_doc)
     if applied_overrides:
-        print(f"  applied {len(applied_overrides)} manual override(s)")
+        print(f"  applied {len(applied_overrides)} manual override(s):")
+        for ov in applied_overrides:
+            print(f"    - match {ov['id']}: {ov['note']}")
 
     team_state, match_log, warnings = derive_team_results(matches, teams_by_name, api_lookup, scoring)
-    for ov in applied_overrides:
-        warnings.append(f"Manual override applied to match {ov['id']}: {ov['note']}")
     leaderboard = build_leaderboard(managers_doc, team_state)
 
     # Render team_results in pot order, then alphabetical, for stable UI display

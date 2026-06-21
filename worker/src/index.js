@@ -514,10 +514,11 @@ function applyOverrides(matches) {
 function computeResults(matches) {
   const { byName, apiLookup } = buildTeamIndex(teamsDoc);
   const applied = applyOverrides(matches);
-  const { teamState, matchLog, warnings } = deriveTeamResults(matches, byName, apiLookup);
-  for (const ov of applied) {
-    warnings.push(`Manual override applied to match ${ov.id}: ${ov.note}`);
+  if (applied.length > 0) {
+    console.log(`applied ${applied.length} manual override(s):`);
+    for (const ov of applied) console.log(`  - match ${ov.id}: ${ov.note}`);
   }
+  const { teamState, matchLog, warnings } = deriveTeamResults(matches, byName, apiLookup);
   const leaderboard = buildLeaderboard(managersDoc, teamState);
 
   const teamResults = [...teamState.values()].sort(
