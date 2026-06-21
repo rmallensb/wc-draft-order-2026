@@ -28,11 +28,13 @@
   }
   const { data, source } = loaded;
 
+  const modal = setupTeamModal(data);
+
   renderSynced(data, source);
   renderWarnings(data.warnings);
-  renderLeaderboard(data.leaderboard);
+  renderLeaderboard(data.leaderboard, modal);
   renderBreakdown(data.leaderboard);
-  renderKnockoutGrid(data.teamResults);
+  renderKnockoutGrid(data.teamResults, modal);
   renderMatchLog(data.matches);
 
   async function loadData() {
@@ -94,7 +96,86 @@
     });
   }
 
-  function renderLeaderboard(rows) {
+  function setupTeamModal(data) {
+    const dialog = document.getElementById("team-modal");
+    const body = document.getElementById("team-modal-body");
+    const closeBtn = dialog.querySelector(".modal-close");
+
+    closeBtn.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+
+    const teamsByName = new Map((data.teamResults || []).map(t => [t.team, t]));
+    const ownersByTeam = new Map();
+    for (const row of data.leaderboard || []) {
+      for (const t of row.teams || []) {
+        if (!t || !t.team) continue;
+        const list = ownersByTeam.get(t.team) || [];
+        list.push(row.manager);
+        ownersByTeam.set(t.team, list);
+      }
+    }
+
+    return {
+      open(teamName) {
+        const team = teamsByName.get(teamName);
+        if (!team) return;
+        renderTeamModalBody(body, team, ownersByTeam.get(teamName) || []);
+        dialog.showModal();
+      },
+    };
+  }
+
+  function renderTeamModalBody(body, team, owners) {
+    clear(body);
+    const total = (team.groupPoints || 0) + (team.knockoutBonus || 0);
+
+    body.appendChild(el("h2", { className: "modal-team-name", text: team.team }));
+    body.appendChild(el("p", { className: "modal-subtitle", text: `Pot ${team.pot} · FIFA #${team.fifaRank}` }));
+    body.appendChild(el("p", {
+      className: "modal-owners",
+      text: owners.length ? `Drawn by ${owners.join(", ")}` : "Drawn by nobody",
+    }));
+
+    body.appendChild(el("div", { className: "modal-stats" }, [
+      statBlock("Record", `${team.wins}-${team.draws}-${team.losses}`),
+      statBlock("Goals F/A", `${team.goalsFor} / ${team.goalsAgainst}`),
+      statBlock("Clean Sheets", String(team.cleanSheets)),
+      statBlock("Group Pts", String(team.groupPoints)),
+      statBlock("KO Bonus", `+${team.knockoutBonus}`),
+      statBlock("Total Pts", String(total), true),
+    ]));
+
+    body.appendChild(el("h3", { className: "modal-section-title", text: "Group Stage Matches" }));
+    if (!team.matches || team.matches.length === 0) {
+      body.appendChild(el("p", { className: "missing", text: "No group stage matches played yet." }));
+    } else {
+      const list = el("div", { className: "modal-match-list" });
+      team.matches.forEach((m) => {
+        const result = (m.result || "").toLowerCase();
+        list.appendChild(el("div", { className: `modal-match-row result-${result}` }, [
+          el("div", { className: "result-badge", text: m.result }),
+          el("div", { className: "match-detail", text: `vs ${m.opponent}` }),
+          el("div", { className: "match-score", text: `${m.gf}–${m.ga}` }),
+          el("div", { className: "match-points", text: `+${m.points}` }),
+        ]));
+      });
+      body.appendChild(list);
+    }
+
+    body.appendChild(el("h3", { className: "modal-section-title", text: "Knockout Stage" }));
+    body.appendChild(el("p", { className: "modal-finish", text: team.finishLabel }));
+  }
+
+  function statBlock(label, value, highlight = false) {
+    return el("div", { className: highlight ? "stat-block highlight" : "stat-block" }, [
+      el("div", { className: "stat-label", text: label }),
+      el("div", { className: "stat-value", text: value }),
+    ]);
+  }
+
+  function renderLeaderboard(rows, modal) {
     const tbody = document.querySelector("#leaderboard tbody");
     clear(tbody);
     if (!rows || !rows.length) {
@@ -109,9 +190,9 @@
       const tr = el("tr", { className: `rank-${r.rank}` }, [
         el("td", { text: r.rank }),
         el("td", { text: r.manager }),
-        el("td", {}, [teamChip(r.teams[0], 1)]),
-        el("td", {}, [teamChip(r.teams[1], 2)]),
-        el("td", {}, [teamChip(r.teams[2], 3)]),
+        el("td", {}, [teamChip(r.teams[0], 1, modal)]),
+        el("td", {}, [teamChip(r.teams[1], 2, modal)]),
+        el("td", {}, [teamChip(r.teams[2], 3, modal)]),
         el("td", { className: "num", title: `${c.wins}W-${c.draws}D-${c.losses}L of 9 possible`, text: `${gamesPlayed}/9` }),
         el("td", { className: "num", text: r.groupPoints }),
         el("td", { className: "num", text: r.knockoutBonus }),
@@ -151,16 +232,30 @@
     });
   }
 
-  function teamChip(team, potHint) {
+  function teamChip(team, potHint, modal) {
     if (!team) return el("span", { className: "missing", text: "—" });
     if (team.missing) return el("span", { className: "missing", text: `${team.team}?` });
     const pot = team.pot || potHint;
     const total = (team.groupPoints || 0) + (team.knockoutBonus || 0);
-    const title = `Group ${team.groupPoints} + KO ${team.knockoutBonus} = ${total} pts • ${team.finishLabel}`;
-    return el("span", { className: `team-chip pot-${pot}`, title, text: team.team });
+    const baseTitle = `Group ${team.groupPoints} + KO ${team.knockoutBonus} = ${total} pts • ${team.finishLabel}`;
+    const title = modal ? `${baseTitle} (click for details)` : baseTitle;
+    const chip = el("span", {
+      className: `team-chip pot-${pot}${modal ? " clickable" : ""}`,
+      title,
+      text: team.team,
+    });
+    if (modal) {
+      chip.setAttribute("role", "button");
+      chip.tabIndex = 0;
+      chip.addEventListener("click", () => modal.open(team.team));
+      chip.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); modal.open(team.team); }
+      });
+    }
+    return chip;
   }
 
-  function renderKnockoutGrid(teamResults) {
+  function renderKnockoutGrid(teamResults, modal) {
     const grid = $("#knockout-grid");
     clear(grid);
     if (!teamResults || !teamResults.length) {
@@ -170,7 +265,7 @@
     teamResults.forEach((t) => {
       const total = (t.groupPoints || 0) + (t.knockoutBonus || 0);
       const record = `${t.wins}W-${t.draws}D-${t.losses}L`;
-      const card = el("div", { className: `knockout-card pot-${t.pot}` }, [
+      const card = el("div", { className: `knockout-card pot-${t.pot}${modal ? " clickable" : ""}` }, [
         el("div", { className: "team", text: t.team }),
         el("div", { className: "meta" }, [
           el("span", { text: `Pot ${t.pot} • FIFA #${t.fifaRank}` }),
@@ -191,6 +286,15 @@
           })(),
         ]),
       ]);
+      if (modal) {
+        card.setAttribute("role", "button");
+        card.tabIndex = 0;
+        card.title = "Click for details";
+        card.addEventListener("click", () => modal.open(t.team));
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); modal.open(t.team); }
+        });
+      }
       grid.appendChild(card);
     });
   }
