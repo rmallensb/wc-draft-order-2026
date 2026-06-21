@@ -1,6 +1,8 @@
 (async function () {
   const $ = (sel) => document.querySelector(sel);
 
+  setupSectionPersistence();
+
   const STAGE_LABELS = {
     GROUP_STAGE: "Group Stage",
     LAST_32: "Round of 32",
@@ -93,6 +95,33 @@
     const main = document.querySelector("main");
     warnings.forEach((w) => {
       main.prepend(el("div", { className: "warning", text: w }));
+    });
+  }
+
+  function setupSectionPersistence() {
+    const STORAGE_KEY = "wc-draft-order:sections";
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") || {};
+    } catch (e) {
+      saved = {};
+    }
+
+    const sections = document.querySelectorAll("details.section");
+    sections.forEach((section) => {
+      const id = section.id;
+      if (!id) return;
+      if (id in saved) {
+        section.open = Boolean(saved[id]);
+      }
+      section.addEventListener("toggle", () => {
+        saved[id] = section.open;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        } catch (e) {
+          // localStorage may be unavailable (Safari private mode pre-iOS 11) — ignore.
+        }
+      });
     });
   }
 
