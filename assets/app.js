@@ -35,7 +35,7 @@
   renderSynced(data, source);
   renderWarnings(data.warnings);
   renderLeaderboard(data.leaderboard, modal);
-  renderBreakdown(data.leaderboard);
+  renderBreakdown(data.leaderboard, modal);
   renderKnockoutGrid(data.teamResults, modal);
   renderMatchLog(data.matches);
 
@@ -145,15 +145,25 @@
         ownersByTeam.set(t.team, list);
       }
     }
+    const managersById = new Map((data.leaderboard || []).map(r => [r.id, r]));
 
-    return {
-      open(teamName) {
+    const api = {
+      openTeam(teamName) {
         const team = teamsByName.get(teamName);
         if (!team) return;
-        renderTeamModalBody(body, team, ownersByTeam.get(teamName) || []);
+        renderTeamModalBody(body, team, ownersByTeam.get(teamName) || [], api);
         dialog.showModal();
       },
+      openManager(managerId) {
+        const row = managersById.get(managerId);
+        if (!row) return;
+        renderManagerModalBody(body, row, teamsByName, api);
+        dialog.showModal();
+      },
+      // Legacy alias so existing chip/card callers continue to work.
+      open(teamName) { api.openTeam(teamName); },
     };
+    return api;
   }
 
   function renderTeamModalBody(body, team, owners) {
@@ -197,6 +207,60 @@
     body.appendChild(el("p", { className: "modal-finish", text: team.finishLabel }));
   }
 
+  function renderManagerModalBody(body, row, teamsByName, modalApi) {
+    clear(body);
+    const c = row.categories || { wins: 0, draws: 0, losses: 0, goalsFor: 0, cleanSheets: 0 };
+    const gp = c.wins + c.draws + c.losses;
+
+    body.appendChild(el("h2", { className: "modal-team-name", text: row.manager }));
+    body.appendChild(el("p", {
+      className: "modal-subtitle",
+      text: `Rank #${row.rank} · ${row.totalPoints} pts · ${gp}/9 group games played`,
+    }));
+
+    // Three team chips, clickable through to the team modal
+    const teamRow = el("div", { className: "modal-team-row" });
+    row.teams.forEach((t, i) => {
+      const potHint = i + 1;
+      teamRow.appendChild(teamChip(t, potHint, modalApi));
+    });
+    body.appendChild(teamRow);
+
+    body.appendChild(el("div", { className: "modal-stats" }, [
+      statBlock("Wins (×3)", `${c.wins} = ${c.wins * 3}`),
+      statBlock("Draws (×1)", String(c.draws)),
+      statBlock("Goals (×1)", String(c.goalsFor)),
+      statBlock("Clean Sheets (×1)", String(c.cleanSheets)),
+      statBlock("KO Bonus", `+${row.knockoutBonus}`),
+      statBlock("Total Pts", String(row.totalPoints), true),
+    ]));
+
+    row.teams.forEach((t) => {
+      if (!t || t.missing || !t.team) return;
+      const team = teamsByName.get(t.team);
+      const teamTotal = (t.groupPoints || 0) + (t.knockoutBonus || 0);
+      body.appendChild(el("h3", {
+        className: "modal-section-title",
+        text: `${t.team} (Pot ${t.pot}) — ${teamTotal} pts · ${t.finishLabel}`,
+      }));
+      if (!team || !team.matches || team.matches.length === 0) {
+        body.appendChild(el("p", { className: "missing", text: "No matches played yet." }));
+        return;
+      }
+      const list = el("div", { className: "modal-match-list" });
+      team.matches.forEach((m) => {
+        const result = (m.result || "").toLowerCase();
+        list.appendChild(el("div", { className: `modal-match-row result-${result}` }, [
+          el("div", { className: "result-badge", text: m.result }),
+          el("div", { className: "match-detail", text: `vs ${m.opponent}` }),
+          el("div", { className: "match-score", text: `${m.gf}–${m.ga}` }),
+          el("div", { className: "match-points", text: `+${m.points}` }),
+        ]));
+      });
+      body.appendChild(list);
+    });
+  }
+
   function statBlock(label, value, highlight = false) {
     return el("div", { className: highlight ? "stat-block highlight" : "stat-block" }, [
       el("div", { className: "stat-label", text: label }),
@@ -218,7 +282,7 @@
       const gamesPlayed = c.wins + c.draws + c.losses;
       const tr = el("tr", { className: `rank-${r.rank}` }, [
         el("td", { text: r.rank }),
-        el("td", { text: r.manager }),
+        el("td", {}, [managerName(r, modal)]),
         el("td", {}, [teamChip(r.teams[0], 1, modal)]),
         el("td", {}, [teamChip(r.teams[1], 2, modal)]),
         el("td", {}, [teamChip(r.teams[2], 3, modal)]),
@@ -232,7 +296,19 @@
     });
   }
 
-  function renderBreakdown(rows) {
+  function managerName(row, modal) {
+    if (!modal) return el("span", { text: row.manager });
+    const span = el("span", { className: "manager-name clickable", text: row.manager, title: "Click for details" });
+    span.setAttribute("role", "button");
+    span.tabIndex = 0;
+    span.addEventListener("click", () => modal.openManager(row.id));
+    span.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); modal.openManager(row.id); }
+    });
+    return span;
+  }
+
+  function renderBreakdown(rows, modal) {
     const tbody = document.querySelector("#breakdown tbody");
     clear(tbody);
     if (!rows || !rows.length) {
@@ -248,7 +324,7 @@
       const goalPts = c.goalsFor;
       const cleanPts = c.cleanSheets;
       const tr = el("tr", { className: `rank-${r.rank}` }, [
-        el("td", { text: r.manager }),
+        el("td", {}, [managerName(r, modal)]),
         el("td", { className: "num", title: `${winPts} pts`, text: c.wins }),
         el("td", { className: "num", title: `${drawPts} pts`, text: c.draws }),
         el("td", { className: "num", title: `${goalPts} pts`, text: c.goalsFor }),
