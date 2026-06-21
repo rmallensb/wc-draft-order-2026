@@ -1,11 +1,12 @@
 """One-off diagnostic: print the raw shape of football-data.org's per-match
-response for a recent finished match. Helps us figure out whether goal events
-are missing because of a free-tier limit or a parsing bug.
+response for a recent finished match, plus ESPN's keyEvents for goal events.
 
 Usage:
-    .venv/bin/python diagnose_match.py
+    .venv/bin/python diagnose_match.py              # picks first 4+ goal match
+    .venv/bin/python diagnose_match.py --team Spain # picks Spain's most-recent finished match
 """
 
+import argparse
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -23,16 +24,21 @@ def load_api_key() -> str:
     raise SystemExit("FOOTBALL_DATA_API_KEY not found in .env")
 
 
-def pick_match() -> dict:
+def pick_match(team: str | None = None) -> dict:
     matches = json.loads((ROOT / "data" / "results.json").read_text())["matches"]
-    # Prefer a high-scoring finished match (more likely to expose goal events if available)
-    finished = [
-        m for m in matches
-        if m.get("status") == "FINISHED"
-        and (m.get("homeGoals") or 0) + (m.get("awayGoals") or 0) >= 4
-    ]
-    if not finished:
-        finished = [m for m in matches if m.get("status") == "FINISHED"]
+    finished = [m for m in matches if m.get("status") == "FINISHED"]
+    if team:
+        t = team.lower()
+        finished = [m for m in finished if t in (m.get("home", "").lower(), m.get("away", "").lower())]
+        if not finished:
+            raise SystemExit(f"No finished matches found for team {team!r}.")
+        # Most recent by utcDate
+        finished.sort(key=lambda m: m.get("utcDate", ""), reverse=True)
+        return finished[0]
+    # Default: first high-scoring finished match
+    high = [m for m in finished if (m.get("homeGoals") or 0) + (m.get("awayGoals") or 0) >= 4]
+    if high:
+        return high[0]
     if not finished:
         raise SystemExit("No finished matches found in data/results.json — run `make sync` first.")
     return finished[0]
@@ -143,10 +149,22 @@ def probe_espn(home: str, away: str, utc_date: str) -> None:
             text = g.get("text", "")
             print(f"    {clock} [{team}] {text}")
 
+    # Hunt for VAR / Disallowed events — needed to filter out overturned goals
+    var_events = [e for e in key_events if any(kw in (e.get("type") or {}).get("text", "").lower()
+                                               or kw in (e.get("text") or "").lower()
+                                               for kw in ("var", "disallowed", "cancel", "overturn"))]
+    print(f"\n  VAR / Disallowed events: {len(var_events)}")
+    for e in var_events:
+        print(f"    Full event:\n{json.dumps(e, indent=2)}")
+
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--team", help="Pick the most recent finished match for this team")
+    args = parser.parse_args()
+
     key = load_api_key()
-    m = pick_match()
+    m = pick_match(args.team)
     print(f"Testing match {m['id']}: {m['home']} {m['homeGoals']}-{m['awayGoals']} {m['away']}")
 
     resp = requests.get(f"{API_BASE}/{m['id']}", headers={"X-Auth-Token": key}, timeout=30)

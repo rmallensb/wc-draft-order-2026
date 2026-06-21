@@ -1,5 +1,5 @@
 {
-  "lastSynced": "2026-06-21T18:42:02+00:00",
+  "lastSynced": "2026-06-21T19:39:49+00:00",
   "matchesProcessed": 104,
   "matchesFinished": 37,
   "leaderboard": [
@@ -126,67 +126,6 @@
       "rank": 2
     },
     {
-      "id": 4,
-      "manager": "Ryan",
-      "teams": [
-        {
-          "team": "Spain",
-          "pot": 1,
-          "groupPoints": 11,
-          "knockoutBonus": 0,
-          "finishLabel": "Group stage in progress",
-          "fifaRank": 2,
-          "wins": 1,
-          "draws": 1,
-          "losses": 0,
-          "goalsFor": 5,
-          "goalsAgainst": 0,
-          "cleanSheets": 2
-        },
-        {
-          "team": "Japan",
-          "pot": 2,
-          "groupPoints": 11,
-          "knockoutBonus": 0,
-          "finishLabel": "Group stage in progress",
-          "fifaRank": 18,
-          "wins": 1,
-          "draws": 1,
-          "losses": 0,
-          "goalsFor": 6,
-          "goalsAgainst": 2,
-          "cleanSheets": 1
-        },
-        {
-          "team": "Czechia",
-          "pot": 3,
-          "groupPoints": 3,
-          "knockoutBonus": 0,
-          "finishLabel": "Group stage in progress",
-          "fifaRank": 36,
-          "wins": 0,
-          "draws": 1,
-          "losses": 1,
-          "goalsFor": 2,
-          "goalsAgainst": 3,
-          "cleanSheets": 0
-        }
-      ],
-      "categories": {
-        "wins": 2,
-        "draws": 3,
-        "losses": 1,
-        "goalsFor": 13,
-        "goalsAgainst": 5,
-        "cleanSheets": 3
-      },
-      "groupPoints": 25,
-      "knockoutBonus": 0,
-      "totalPoints": 25,
-      "fifaRankSum": 56,
-      "rank": 3
-    },
-    {
       "id": 11,
       "manager": "Aiden",
       "teams": [
@@ -245,6 +184,67 @@
       "knockoutBonus": 0,
       "totalPoints": 24,
       "fifaRankSum": 64,
+      "rank": 3
+    },
+    {
+      "id": 4,
+      "manager": "Ryan",
+      "teams": [
+        {
+          "team": "Spain",
+          "pot": 1,
+          "groupPoints": 10,
+          "knockoutBonus": 0,
+          "finishLabel": "Group stage in progress",
+          "fifaRank": 2,
+          "wins": 1,
+          "draws": 1,
+          "losses": 0,
+          "goalsFor": 4,
+          "goalsAgainst": 0,
+          "cleanSheets": 2
+        },
+        {
+          "team": "Japan",
+          "pot": 2,
+          "groupPoints": 11,
+          "knockoutBonus": 0,
+          "finishLabel": "Group stage in progress",
+          "fifaRank": 18,
+          "wins": 1,
+          "draws": 1,
+          "losses": 0,
+          "goalsFor": 6,
+          "goalsAgainst": 2,
+          "cleanSheets": 1
+        },
+        {
+          "team": "Czechia",
+          "pot": 3,
+          "groupPoints": 3,
+          "knockoutBonus": 0,
+          "finishLabel": "Group stage in progress",
+          "fifaRank": 36,
+          "wins": 0,
+          "draws": 1,
+          "losses": 1,
+          "goalsFor": 2,
+          "goalsAgainst": 3,
+          "cleanSheets": 0
+        }
+      ],
+      "categories": {
+        "wins": 2,
+        "draws": 3,
+        "losses": 1,
+        "goalsFor": 12,
+        "goalsAgainst": 5,
+        "cleanSheets": 3
+      },
+      "groupPoints": 24,
+      "knockoutBonus": 0,
+      "totalPoints": 24,
+      "fifaRankSum": 56,
       "rank": 4
     },
     {
@@ -431,67 +431,6 @@
       "rank": 7
     },
     {
-      "id": 10,
-      "manager": "Vance",
-      "teams": [
-        {
-          "team": "Spain",
-          "pot": 1,
-          "groupPoints": 11,
-          "knockoutBonus": 0,
-          "finishLabel": "Group stage in progress",
-          "fifaRank": 2,
-          "wins": 1,
-          "draws": 1,
-          "losses": 0,
-          "goalsFor": 5,
-          "goalsAgainst": 0,
-          "cleanSheets": 2
-        },
-        {
-          "team": "Ecuador",
-          "pot": 2,
-          "groupPoints": 2,
-          "knockoutBonus": 0,
-          "finishLabel": "Group stage in progress",
-          "fifaRank": 27,
-          "wins": 0,
-          "draws": 1,
-          "losses": 1,
-          "goalsFor": 0,
-          "goalsAgainst": 1,
-          "cleanSheets": 1
-        },
-        {
-          "team": "Iran",
-          "pot": 3,
-          "groupPoints": 3,
-          "knockoutBonus": 0,
-          "finishLabel": "Group stage in progress",
-          "fifaRank": 21,
-          "wins": 0,
-          "draws": 1,
-          "losses": 0,
-          "goalsFor": 2,
-          "goalsAgainst": 2,
-          "cleanSheets": 0
-        }
-      ],
-      "categories": {
-        "wins": 1,
-        "draws": 3,
-        "losses": 1,
-        "goalsFor": 7,
-        "goalsAgainst": 3,
-        "cleanSheets": 3
-      },
-      "groupPoints": 16,
-      "knockoutBonus": 0,
-      "totalPoints": 16,
-      "fifaRankSum": 50,
-      "rank": 8
-    },
-    {
       "id": 9,
       "manager": "Trevor",
       "teams": [
@@ -550,6 +489,67 @@
       "knockoutBonus": 0,
       "totalPoints": 15,
       "fifaRankSum": 59,
+      "rank": 8
+    },
+    {
+      "id": 10,
+      "manager": "Vance",
+      "teams": [
+        {
+          "team": "Spain",
+          "pot": 1,
+          "groupPoints": 10,
+          "knockoutBonus": 0,
+          "finishLabel": "Group stage in progress",
+          "fifaRank": 2,
+          "wins": 1,
+          "draws": 1,
+          "losses": 0,
+          "goalsFor": 4,
+          "goalsAgainst": 0,
+          "cleanSheets": 2
+        },
+        {
+          "team": "Ecuador",
+          "pot": 2,
+          "groupPoints": 2,
+          "knockoutBonus": 0,
+          "finishLabel": "Group stage in progress",
+          "fifaRank": 27,
+          "wins": 0,
+          "draws": 1,
+          "losses": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 1,
+          "cleanSheets": 1
+        },
+        {
+          "team": "Iran",
+          "pot": 3,
+          "groupPoints": 3,
+          "knockoutBonus": 0,
+          "finishLabel": "Group stage in progress",
+          "fifaRank": 21,
+          "wins": 0,
+          "draws": 1,
+          "losses": 0,
+          "goalsFor": 2,
+          "goalsAgainst": 2,
+          "cleanSheets": 0
+        }
+      ],
+      "categories": {
+        "wins": 1,
+        "draws": 3,
+        "losses": 1,
+        "goalsFor": 6,
+        "goalsAgainst": 3,
+        "cleanSheets": 3
+      },
+      "groupPoints": 15,
+      "knockoutBonus": 0,
+      "totalPoints": 15,
+      "fifaRankSum": 50,
       "rank": 9
     },
     {
@@ -918,14 +918,14 @@
           "matchday": 2,
           "utcDate": "2026-06-21T16:00:00Z",
           "opponent": "Saudi Arabia",
-          "gf": 5,
+          "gf": 4,
           "ga": 0,
           "result": "W",
-          "points": 9
+          "points": 8
         }
       ],
-      "groupPoints": 11,
-      "goalsFor": 5,
+      "groupPoints": 10,
+      "goalsFor": 4,
       "goalsAgainst": 0,
       "wins": 1,
       "draws": 1,
@@ -1986,7 +1986,7 @@
       "away": "Saudi Arabia",
       "homeIsLeague": true,
       "awayIsLeague": false,
-      "homeGoals": 5,
+      "homeGoals": 4,
       "awayGoals": 0,
       "halfTimeHome": 3,
       "halfTimeAway": 0
@@ -1994,7 +1994,7 @@
     {
       "id": 537365,
       "stage": "GROUP_STAGE",
-      "status": "TIMED",
+      "status": "IN_PLAY",
       "utcDate": "2026-06-21T19:00:00Z",
       "matchday": 2,
       "minute": null,
@@ -2002,8 +2002,8 @@
       "away": "Iran",
       "homeIsLeague": false,
       "awayIsLeague": true,
-      "homeGoals": null,
-      "awayGoals": null,
+      "homeGoals": 0,
+      "awayGoals": 1,
       "halfTimeHome": null,
       "halfTimeAway": null
     },
@@ -3064,5 +3064,7 @@
       "halfTimeAway": null
     }
   ],
-  "warnings": []
+  "warnings": [
+    "Manual override applied to match 537371: Spain vs Saudi Arabia — football-data reported 5-0; ESPN and reality say 4-0 (disallowed goal in stoppage time)"
+  ]
 }

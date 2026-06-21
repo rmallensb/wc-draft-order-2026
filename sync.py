@@ -37,6 +37,39 @@ def load_json(name: str) -> dict[str, Any]:
         return json.load(f)
 
 
+def apply_overrides(matches: list[dict[str, Any]], overrides_doc: dict[str, Any]) -> list[dict[str, Any]]:
+    """Patch known-bad match data from football-data.org with manual corrections.
+    Returns the list of applied overrides for surfacing as warnings.
+    """
+    overrides_by_id = overrides_doc.get("matches", {})
+    if not overrides_by_id:
+        return []
+    by_id = {m.get("id"): m for m in matches if m.get("id") is not None}
+    applied = []
+    for mid_str, ov in overrides_by_id.items():
+        try:
+            mid = int(mid_str)
+        except (TypeError, ValueError):
+            continue
+        match = by_id.get(mid)
+        if not match:
+            continue
+        score = match.setdefault("score", {})
+        ft = score.setdefault("fullTime", {})
+        if "homeGoals" in ov:
+            ft["home"] = ov["homeGoals"]
+        if "awayGoals" in ov:
+            ft["away"] = ov["awayGoals"]
+        if "status" in ov:
+            match["status"] = ov["status"]
+        # Recompute winner so downstream scoring stays consistent.
+        h, a = ft.get("home"), ft.get("away")
+        if isinstance(h, int) and isinstance(a, int):
+            score["winner"] = "HOME_TEAM" if h > a else "AWAY_TEAM" if a > h else "DRAW"
+        applied.append({"id": mid, "note": ov.get("note", "")})
+    return applied
+
+
 def fetch_matches(api_key: str) -> list[dict[str, Any]]:
     try:
         resp = requests.get(API_URL, headers={"X-Auth-Token": api_key}, timeout=30)
@@ -347,6 +380,10 @@ def main() -> int:
     teams_doc = load_json("teams.json")
     managers_doc = load_json("managers.json")
     scoring = load_json("scoring.json")
+    try:
+        overrides_doc = load_json("overrides.json")
+    except FileNotFoundError:
+        overrides_doc = {}
 
     teams_by_name, api_lookup = build_team_index(teams_doc)
 
@@ -354,7 +391,13 @@ def main() -> int:
     matches = fetch_matches(api_key)
     print(f"  got {len(matches)} matches")
 
+    applied_overrides = apply_overrides(matches, overrides_doc)
+    if applied_overrides:
+        print(f"  applied {len(applied_overrides)} manual override(s)")
+
     team_state, match_log, warnings = derive_team_results(matches, teams_by_name, api_lookup, scoring)
+    for ov in applied_overrides:
+        warnings.append(f"Manual override applied to match {ov['id']}: {ov['note']}")
     leaderboard = build_leaderboard(managers_doc, team_state)
 
     # Render team_results in pot order, then alphabetical, for stable UI display

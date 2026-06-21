@@ -5,6 +5,7 @@
 import managersDoc from "../../data/managers.json";
 import teamsDoc    from "../../data/teams.json";
 import scoring     from "../../data/scoring.json";
+import overridesDoc from "../../data/overrides.json";
 
 const API_URL = "https://api.football-data.org/v4/competitions/WC/matches";
 
@@ -487,9 +488,36 @@ function buildLeaderboard(managersDoc, teamState) {
   return rows;
 }
 
+function applyOverrides(matches) {
+  const overrides = overridesDoc.matches || {};
+  const ids = Object.keys(overrides);
+  if (ids.length === 0) return [];
+  const byId = new Map(matches.filter(m => m && m.id != null).map(m => [String(m.id), m]));
+  const applied = [];
+  for (const [mid, ov] of Object.entries(overrides)) {
+    const m = byId.get(String(mid));
+    if (!m) continue;
+    m.score = m.score || {};
+    m.score.fullTime = m.score.fullTime || {};
+    if (typeof ov.homeGoals === "number") m.score.fullTime.home = ov.homeGoals;
+    if (typeof ov.awayGoals === "number") m.score.fullTime.away = ov.awayGoals;
+    if (typeof ov.status === "string") m.status = ov.status;
+    const h = m.score.fullTime.home, a = m.score.fullTime.away;
+    if (typeof h === "number" && typeof a === "number") {
+      m.score.winner = h > a ? "HOME_TEAM" : a > h ? "AWAY_TEAM" : "DRAW";
+    }
+    applied.push({ id: mid, note: ov.note || "" });
+  }
+  return applied;
+}
+
 function computeResults(matches) {
   const { byName, apiLookup } = buildTeamIndex(teamsDoc);
+  const applied = applyOverrides(matches);
   const { teamState, matchLog, warnings } = deriveTeamResults(matches, byName, apiLookup);
+  for (const ov of applied) {
+    warnings.push(`Manual override applied to match ${ov.id}: ${ov.note}`);
+  }
   const leaderboard = buildLeaderboard(managersDoc, teamState);
 
   const teamResults = [...teamState.values()].sort(

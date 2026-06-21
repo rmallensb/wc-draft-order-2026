@@ -1,0 +1,10 @@
+{
+  "_comment": "Manual score corrections for matches where football-data.org's free tier reports a score that doesn't match reality (typically VAR-disallowed goals that the upstream didn't subtract). Keyed by football-data match id. The note shows up in the UI as a warning so it's clear a correction is in play.",
+  "matches": {
+    "537371": {
+      "homeGoals": 4,
+      "awayGoals": 0,
+      "note": "Spain vs Saudi Arabia — football-data reported 5-0; ESPN and reality say 4-0 (disallowed goal in stoppage time)"
+    }
+  }
+}
