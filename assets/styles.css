@@ -13,6 +13,9 @@
   --pot1: #f59e0b;
   --pot2: #38bdf8;
   --pot3: #a78bfa;
+  --gold:   #fbbf24;
+  --silver: #d1d5db;
+  --bronze: #c08457;
 }
 
 * { box-sizing: border-box; }
@@ -145,10 +148,16 @@ table.leaderboard td.total {
   color: var(--accent);
 }
 
-table.leaderboard tr.rank-1 td:first-child {
-  color: var(--warn);
+table#leaderboard tr.rank-1 td:first-child,
+table#leaderboard tr.rank-2 td:first-child,
+table#leaderboard tr.rank-3 td:first-child {
   font-weight: 700;
+  font-size: 1.05rem;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
+table#leaderboard tr.rank-1 td:first-child { color: var(--gold); }
+table#leaderboard tr.rank-2 td:first-child { color: var(--silver); }
+table#leaderboard tr.rank-3 td:first-child { color: var(--bronze); }
 
 table.leaderboard th small {
   color: var(--text-dim);
