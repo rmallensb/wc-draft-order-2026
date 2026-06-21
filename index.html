@@ -68,7 +68,12 @@
 
     <details open class="section" id="matches-section">
       <summary>Match Log</summary>
-      <p class="hint">All World Cup matches involving league teams. Group stage points shown for finished games.</p>
+      <p class="hint">All World Cup matches, grouped by stage. Live games show their current score and minute.</p>
+      <label class="filter-toggle">
+        <input type="checkbox" id="hide-non-league" />
+        <span>Hide non-league games</span>
+        <small>Hide matches with no league team — leaderboard isn't affected either way.</small>
+      </label>
       <div id="match-log" class="match-log"></div>
     </details>
 

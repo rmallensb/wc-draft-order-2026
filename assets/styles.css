@@ -262,6 +262,43 @@ table.leaderboard th small {
 .match-row.upcoming .score { color: var(--text-dim); font-weight: 400; }
 .match-row .status { color: var(--text-dim); font-size: 0.75rem; text-align: right; text-transform: uppercase; }
 .match-row.finished .status { color: var(--good); }
+.match-row.in-play { border-color: var(--bad); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25); }
+.match-row.in-play .status { color: var(--bad); font-weight: 700; }
+.match-row.in-play .score { color: var(--text); font-weight: 700; }
+.match-row.non-league { opacity: 0.55; }
+.match-row.non-league .team-name { font-style: italic; }
+
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--bad);
+  border-radius: 50%;
+  margin-right: 0.3rem;
+  animation: pulse-dot 1.4s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.filter-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+.filter-toggle input { cursor: pointer; }
+.filter-toggle small {
+  flex-basis: 100%;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
 
 .team-name.is-league { font-weight: 600; }
 

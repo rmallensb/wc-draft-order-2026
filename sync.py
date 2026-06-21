@@ -135,11 +135,8 @@ def derive_team_results(
         if away_name is not None:
             league_api_names_seen.add(away_api)
 
-        # Only matches involving at least one league team appear in the log
-        if home_name is None and away_name is None:
-            continue
-
         ft = (m.get("score") or {}).get("fullTime") or {}
+        ht = (m.get("score") or {}).get("halfTime") or {}
         home_goals = ft.get("home")
         away_goals = ft.get("away")
         winner = (m.get("score") or {}).get("winner")
@@ -156,19 +153,23 @@ def derive_team_results(
                 s["maxStageRank"] = rank
                 s["maxStage"] = stage
 
-        # Match log row (visible regardless of league involvement on at least one side)
+        # Match log row — every WC match, league or not. The page filters non-league
+        # games via a UI toggle. Live matches surface `minute` when the API provides it.
         match_log.append({
             "id": m.get("id"),
             "stage": stage,
             "status": status,
             "utcDate": utc_date,
             "matchday": m.get("matchday"),
+            "minute": m.get("minute"),
             "home": home_name or home_api,
             "away": away_name or away_api,
             "homeIsLeague": home_name is not None,
             "awayIsLeague": away_name is not None,
             "homeGoals": home_goals,
             "awayGoals": away_goals,
+            "halfTimeHome": ht.get("home"),
+            "halfTimeAway": ht.get("away"),
         })
 
         if not is_final:

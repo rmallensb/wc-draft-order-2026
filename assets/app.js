@@ -406,37 +406,86 @@
 
   function renderMatchLog(matches) {
     const wrap = $("#match-log");
-    clear(wrap);
-    if (!matches || !matches.length) {
-      wrap.appendChild(el("p", { className: "missing", text: "No matches yet." }));
-      return;
+    const checkbox = document.getElementById("hide-non-league");
+    const HIDE_KEY = "wc-draft-order:hide-non-league";
+
+    let hideNonLeague = true;
+    try {
+      const saved = localStorage.getItem(HIDE_KEY);
+      if (saved !== null) hideNonLeague = saved === "true";
+    } catch (e) { /* ignore */ }
+    if (checkbox) {
+      checkbox.checked = hideNonLeague;
+      checkbox.addEventListener("change", () => {
+        hideNonLeague = checkbox.checked;
+        try { localStorage.setItem(HIDE_KEY, String(hideNonLeague)); } catch (e) { /* ignore */ }
+        draw();
+      });
     }
 
-    const byStage = new Map();
-    matches.forEach((m) => {
-      const list = byStage.get(m.stage) || [];
-      list.push(m);
-      byStage.set(m.stage, list);
-    });
+    function draw() {
+      clear(wrap);
+      if (!matches || !matches.length) {
+        wrap.appendChild(el("p", { className: "missing", text: "No matches yet." }));
+        return;
+      }
 
-    STAGE_ORDER.forEach((stage) => {
-      const list = byStage.get(stage);
-      if (!list) return;
-      wrap.appendChild(el("div", { className: "stage-divider", text: STAGE_LABELS[stage] || stage }));
-      list.forEach((m) => wrap.appendChild(matchRow(m)));
-    });
+      const filtered = matches.filter(m => !hideNonLeague || m.homeIsLeague || m.awayIsLeague);
+      if (filtered.length === 0) {
+        wrap.appendChild(el("p", { className: "missing", text: "No matches match the current filter." }));
+        return;
+      }
+
+      const byStage = new Map();
+      filtered.forEach((m) => {
+        const list = byStage.get(m.stage) || [];
+        list.push(m);
+        byStage.set(m.stage, list);
+      });
+
+      STAGE_ORDER.forEach((stage) => {
+        const list = byStage.get(stage);
+        if (!list) return;
+        wrap.appendChild(el("div", { className: "stage-divider", text: STAGE_LABELS[stage] || stage }));
+        list.forEach((m) => wrap.appendChild(matchRow(m)));
+      });
+    }
+
+    draw();
   }
 
   function matchRow(m) {
     const finished = m.status === "FINISHED";
-    const cls = `match-row ${finished ? "finished" : "upcoming"}`;
-    const score = (typeof m.homeGoals === "number" && typeof m.awayGoals === "number")
-      ? `${m.homeGoals} – ${m.awayGoals}`
-      : "vs";
+    const live = m.status === "IN_PLAY" || m.status === "PAUSED";
+    const isLeagueGame = m.homeIsLeague || m.awayIsLeague;
+    const classes = ["match-row"];
+    if (finished) classes.push("finished");
+    else if (live) classes.push("in-play");
+    else classes.push("upcoming");
+    if (!isLeagueGame) classes.push("non-league");
+
+    const haveScore = typeof m.homeGoals === "number" && typeof m.awayGoals === "number";
+    const score = haveScore ? `${m.homeGoals} – ${m.awayGoals}` : "vs";
     const when = m.utcDate
       ? new Date(m.utcDate).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
       : "";
-    return el("div", { className: cls }, [
+
+    let statusText;
+    if (finished) {
+      statusText = "Final";
+    } else if (live) {
+      statusText = m.minute ? `LIVE ${m.minute}'` : "LIVE";
+    } else if (m.status === "TIMED" || m.status === "SCHEDULED") {
+      statusText = "Upcoming";
+    } else {
+      statusText = (m.status || "").toLowerCase();
+    }
+
+    const statusChildren = live
+      ? [el("span", { className: "live-dot" }), statusText]
+      : [statusText];
+
+    return el("div", { className: classes.join(" ") }, [
       el("div", { className: "when", text: when }),
       el("div", { className: "home" }, [
         el("span", { className: `team-name ${m.homeIsLeague ? "is-league" : ""}`, text: m.home }),
@@ -445,7 +494,7 @@
       el("div", { className: "away" }, [
         el("span", { className: `team-name ${m.awayIsLeague ? "is-league" : ""}`, text: m.away }),
       ]),
-      el("div", { className: "status", text: finished ? "Final" : (m.status || "").toLowerCase() }),
+      el("div", { className: "status" }, statusChildren),
     ]);
   }
 })();

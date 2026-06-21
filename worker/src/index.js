@@ -158,9 +158,8 @@ function deriveTeamResults(matches, byName, apiLookup) {
     if (homeName) leagueApiNamesSeen.add(homeApi);
     if (awayName) leagueApiNamesSeen.add(awayApi);
 
-    if (!homeName && !awayName) continue;
-
     const ft = m.score?.fullTime ?? {};
+    const ht = m.score?.halfTime ?? {};
     const homeGoals = typeof ft.home === "number" ? ft.home : null;
     const awayGoals = typeof ft.away === "number" ? ft.away : null;
     const winner = m.score?.winner ?? null;
@@ -182,12 +181,15 @@ function deriveTeamResults(matches, byName, apiLookup) {
       status,
       utcDate,
       matchday: m.matchday ?? null,
+      minute: m.minute ?? null,
       home: homeName || homeApi,
       away: awayName || awayApi,
       homeIsLeague: homeName !== null,
       awayIsLeague: awayName !== null,
       homeGoals,
       awayGoals,
+      halfTimeHome: typeof ht.home === "number" ? ht.home : null,
+      halfTimeAway: typeof ht.away === "number" ? ht.away : null,
     });
 
     if (!isFinal) continue;
